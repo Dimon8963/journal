@@ -6,7 +6,6 @@ class Teacher
     private $firstName; // Змінна для зберігання імені вчителя
     private $lastName; // Змінна для зберігання прізвища вчителя
     private $email; // Змінна для зберігання email вчителя
-
     /**
      * Конструктор класу Teacher.
      *
