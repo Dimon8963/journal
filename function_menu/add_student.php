@@ -7,49 +7,62 @@ require_once './classes/grade.php';
 require_once './classes/attendance.php';
 require_once './classes/teacher.php';
 
-class RecordStudent {
+class RecordStudent
+{
 
     function addStudentRecord() {
-        // Виведення повідомлення про додавання запису про студента
         echo "Додавання запису про студента:\n";
 
-        // Отримання введених даних про студента
-        $lastName = readline("Прізвище: ");
-        $firstName = readline("Ім'я: ");
-        $age = readline("Вік: ");
-        $group = readline("Група: ");
+        $studentId = readline("ID студента: ");
+        $studentExists = $this->checkStudentExists($studentId);
 
-        // Створення нового екземпляра класу Student
-        $student = new Student(null, $lastName, $firstName, $age, $group);
+        // Оголошення змінних для збереження даних про студента
+        $lastName = null;
+        $firstName = null;
+        $age = null;
+        $group = null;
 
-        // Отримання даних про предмет
+        if ($studentExists) {
+            echo "Студент з ID $studentId вже існує: " . $studentExists['lastName'] . " " . $studentExists['firstName'] . "\n";
+            // Присвоюємо значенням змінним $age та $group значення студента, який вже існує
+            $lastName = $studentExists['lastName'];
+            $firstName = $studentExists['firstName'];
+            $age = $studentExists['age'];
+            $group = $studentExists['group'];
+        } else {
+            // Якщо студента з введеним ID не знайдено, ввести всі дані для нового запису
+            $lastName = readline("Прізвище: ");
+            $firstName = readline("Ім'я: ");
+            $age = readline("Вік: ");
+            $group = readline("Група: ");
+        }
+
+        $student = new Student($studentId, $lastName, $firstName, $age, $group);
+
         $subjectId = readline("ID предмету: ");
         $subjectName = readline("Назва предмету: ");
         $subject = new Subject($subjectId, $subjectName);
 
-        // Отримання даних про вчителя
         $teacherId = readline("ID вчителя: ");
         $teacherFirstName = readline("Ім'я вчителя: ");
         $teacherLastName = readline("Прізвище вчителя: ");
         $teacherEmail = readline("Email вчителя: ");
         $teacher = new Teacher($teacherId, $teacherFirstName, $teacherLastName, $teacherEmail);
 
-        // Отримання даних про оцінку
         $gradeValue = readline("Оцінка: ");
         $gradeDate = readline("Дата оцінки: ");
-        $grade = new Grade(null, null, $subjectId, $gradeValue, $gradeDate);  // Передаємо null для ID студента та ID оцінки
+        $grade = new Grade(null, $studentId, $subjectId, $gradeValue, $gradeDate);
 
-        // Отримання даних про відвідуваність
         $attendanceStatus = readline("Статус відвідуваності (yes/no): ");
         $attendanceDate = readline("Дата відвідування: ");
-        $attendance = new Attendance(null, null, $attendanceDate, $attendanceStatus);  // Передаємо null для ID студента та ID відвідування
+        $attendance = new Attendance(null, $studentId, $attendanceDate, $attendanceStatus);
 
-        // Створення асоціативного масиву з отриманими даними про студента
         $studentData = array(
+            "id" => $studentId,
             "lastName" => $student->getLastName(),
             "firstName" => $student->getFirstName(),
-            "age" => $student->getAge(),
-            "group" => $student->getGroup(),
+            "age" => $student->getAge(), // Використовуємо значення $age змінної
+            "group" => $student->getGroup(), // Використовуємо значення $group змінної
             "subject" => array(
                 "id" => $subjectId,
                 "name" => $subjectName,
@@ -70,12 +83,32 @@ class RecordStudent {
             )
         );
 
-        // Збереження даних про студента в файлі JSON
         $jsonData = json_encode($studentData);
         file_put_contents("students.json", $jsonData . PHP_EOL, FILE_APPEND);
 
-        // Виведення повідомлення про успішне додавання запису про студента
         echo "Запис про студента додано!\n";
     }
 
+
+    // Функція для перевірки наявності студента за його ID у файлі JSON
+    private function checkStudentExists($studentId)
+    {
+        $jsonData = file_get_contents("students.json");
+        $students = explode(PHP_EOL, $jsonData);
+        foreach ($students as $student) {
+            if (!empty($student)) {
+                $studentData = json_decode($student, true);
+                if ($studentData["id"] == $studentId) {
+                    return array(
+                        "lastName" => $studentData["lastName"],
+                        "firstName" => $studentData["firstName"],
+                        "age" => $studentData["age"],
+                        "group" => $studentData["group"]
+                    );
+                }
+            }
+        }
+        // Якщо студента з введеним ID не знайдено, повертаємо null
+        return null;
+    }
 }
