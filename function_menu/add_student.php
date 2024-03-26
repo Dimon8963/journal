@@ -6,15 +6,20 @@ require_once './classes/subject.php';
 require_once './classes/grade.php';
 require_once './classes/attendance.php';
 require_once './classes/teacher.php';
+require_once './function_menu/check_id/CheckIdStudent.php';
 
 class RecordStudent
 {
-
     function addStudentRecord() {
         echo "Додавання запису про студента:\n";
 
         $studentId = readline("ID студента: ");
-        $studentExists = $this->checkStudentExists($studentId);
+
+        // Створюємо екземпляр класу check_id_student
+        $checker = new CheckIdStudent();
+
+        // Викликаємо метод checkStudentExists з екземпляра класу check_id_student
+        $studentExists = $checker->checkStudentExists($studentId);
 
         // Оголошення змінних для збереження даних про студента
         $lastName = null;
@@ -59,10 +64,10 @@ class RecordStudent
 
         $studentData = array(
             "id" => $studentId,
-            "lastName" => $student->getLastName(),
-            "firstName" => $student->getFirstName(),
-            "age" => $student->getAge(), // Використовуємо значення $age змінної
-            "group" => $student->getGroup(), // Використовуємо значення $group змінної
+            "lastName" => $lastName,
+            "firstName" => $firstName,
+            "age" => $age,
+            "group" => $group,
             "subject" => array(
                 "id" => $subjectId,
                 "name" => $subjectName,
@@ -89,26 +94,4 @@ class RecordStudent
         echo "Запис про студента додано!\n";
     }
 
-
-    // Функція для перевірки наявності студента за його ID у файлі JSON
-    private function checkStudentExists($studentId)
-    {
-        $jsonData = file_get_contents("students.json");
-        $students = explode(PHP_EOL, $jsonData);
-        foreach ($students as $student) {
-            if (!empty($student)) {
-                $studentData = json_decode($student, true);
-                if ($studentData["id"] == $studentId) {
-                    return array(
-                        "lastName" => $studentData["lastName"],
-                        "firstName" => $studentData["firstName"],
-                        "age" => $studentData["age"],
-                        "group" => $studentData["group"]
-                    );
-                }
-            }
-        }
-        // Якщо студента з введеним ID не знайдено, повертаємо null
-        return null;
-    }
 }
